@@ -10,7 +10,7 @@ SECRET_KEY = '-bi)-%zbd$)33#kw1r*__qnf(moz-w#s+ie5$1$n^p_v0-e4ch'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 INSTALLED_APPS = [
@@ -95,8 +95,10 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+        "rest_framework.permissions.IsAuthenticated",
     ],
+    'DEFAULT_PAGINATION_CLASS': 'api.pagination.PageLimitPagination',
+    'PAGE_SIZE': 6,
 }
 
 
@@ -106,23 +108,23 @@ DJOSER = {
     'PERMISSIONS': {
         'recipe': ('api.permissions.AuthorStaffOrReadOnly',),
         'recipe_list': ('api.permissions.AuthorStaffOrReadOnly',),
-        'user': ('api.permissions.OwnerUserOrReadOnly',),
-        'user_list': ('api.permissions.OwnerUserOrReadOnly',),
+        'user': ('djoser.permissions.CurrentUserOrAdminOrReadOnly',),
+        'user_list': ('rest_framework.permissions.AllowAny',),
     },
     'SERIALIZERS': {
-        'user': 'api.serializers.UserSerializer',
-        'user_list': 'api.serializers.UserSerializer',
-        'current_user': 'api.serializers.UserSerializer',
+        'user': 'api.serializers.UserInfoSerializer',
+        'user_list': 'api.serializers.UserInfoSerializer',
+        'current_user': 'api.serializers.UserInfoSerializer',
         'user_create': 'api.serializers.UserSerializer',
     },
 }
 
 
-CSRF_TRUSTED_ORIGINS = config(
-    "CSRF_TRUSTED_ORIGINS",
-    default="http://localhost, http://127.0.0.1",
-    cast=Csv(),
-)
+# CSRF_TRUSTED_ORIGINS = config(
+#     "CSRF_TRUSTED_ORIGINS",
+#     default="http://localhost, http://127.0.0.1",
+#     # cast=Csv(),
+# )
 
 
 # Internationalization
@@ -142,4 +144,4 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / MEDIA_URL
+MEDIA_ROOT = BASE_DIR / 'media'

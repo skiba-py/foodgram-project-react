@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+import unicodedata
+from django.db.models import CheckConstraint, Q
 from django.db.models.functions import Length
 
 from core.validators import MinLenValidator, StrValidator
@@ -23,7 +25,7 @@ class User(AbstractUser):
         help_text='Обязательно для заполнения.',
         validators=(
             MinLenValidator(min_len=3, field='username',),
-            StrValidator(field='username'),
+            # StrValidator(field='username'),
         )
     )
     first_name = models.CharField(
@@ -64,9 +66,57 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
+        constraints = (
+            CheckConstraint(
+                check=Q(username__length__gte=3),
+                name='\nusername is too short\n',
+            ),
+        )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.username}: {self.email}'
+
+    @classmethod
+    def normalize_email(cls, email: str) -> str:
+        """Normalize the email address by lowercasing the domain part of it"""
+
+        email = email or ''
+        try:
+            email_name, domain_part = email.strip().rsplit('@', 1)
+        except ValueError:
+            pass
+        else:
+            email = email_name.lower() + '@' + domain_part.lower()
+        return email
+    #
+    # @classmethod
+    # def normalize_username(cls, username: str) -> str:
+    #     return unicodedata.normalize('NFKC', username).capitalize()
+
+    def __normalize_human_names(self, name: str) -> str:
+        """Нормализует имена и фамилии."""
+
+        storage = [None] * len(name)
+        title = True
+        idx = 0
+        for letter in name:
+            letter = letter.lower()
+            if title:
+                if not letter.isalpha():
+                    continue
+                else:
+                    letter = letter.upper()
+                    title = False
+            elif letter in ' -':
+                title = True
+            storage[idx] = letter
+            idx += 1
+        return ''.join(storage[:idx])
+
+    def clean(self) -> None:
+        self.first_name = self.__normalize_human_names(self.first_name)
+        self.last_name = self.__normalize_human_names(self.last_name)
+        return super().clean()
 
 
 class Subscriptions(models.Model):
@@ -100,7 +150,7 @@ class Subscriptions(models.Model):
             ),
             models.CheckConstraint(
                 check=~models.Q(author=models.F('user')),
-                name='\nНельзя подписаться на себя\n'
+                name='\nНельзя подписаться на себя\n',
             ),
         )
 

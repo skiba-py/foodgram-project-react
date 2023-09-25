@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
-from django.db.models import Q, QuerySet
+from django.db.models import Q, QuerySet, Sum
 from django.http import HttpResponse
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework.decorators import action
@@ -9,16 +9,16 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from core.features import create_shopping_list
-from recipes.models import Carts, Favorites, Ingredient, Recipe, Tag
+from recipes.models import Carts, Favorites, Ingredient, Recipe, Tag, AmountIngredient
 from users.models import Subscriptions
 
 from .mixins import AddDeleteMixin
-from .pagination import LimitPagination
-from .permissions import AdminOrReadOnly, AuthorStaffOrReadOnly
-from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
+from .pagination import PageLimitPagination
+from .permissions import AuthorStaffOrReadOnly
+from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated, AllowAny
 from .serializers import (IngredientSerializer, RecipeSerializer,
                           ShortRecipeSerializer, TagSerializer,
-                          UserSubscribeSerializer)
+                          UserSubscribeSerializer,)
 
 User = get_user_model()
 
@@ -26,7 +26,7 @@ User = get_user_model()
 class UserViewSet(DjoserUserViewSet, AddDeleteMixin):
     """Вьюсет для работы с пользователями."""
 
-    pagination_class = LimitPagination
+    pagination_class = PageLimitPagination
     permission_classes = (DjangoModelPermissions,)
     add_serializer = UserSubscribeSerializer
     link_model = Subscriptions
@@ -65,7 +65,8 @@ class TagViewSet(ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (AllowAny,)
+    pagination_class = None
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -73,20 +74,21 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (AllowAny,)
+    pagination_class = None
 
     def get_queryset(self) -> list[Ingredient]:
         """Получает queryset."""
 
-        name: str = self.queryset.query_params.get('name')
+        name: str = self.request.query_params.get('name')
         query = self.queryset
         if not name:
             return query
 
-        starts_queryset = query.filter(name__itstartswith=name)
+        starts_queryset = query.filter(name__istartswith=name)
         starts_names = (ing.name for ing in starts_queryset)
         contain_queryset = query.filter(
-            name__itscontains=name
+            name__icontains=name
         ).exclude(name__in=starts_names)
         return list(starts_queryset) + list(contain_queryset)
 
@@ -97,7 +99,7 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
     queryset = Recipe.objects.select_related('author')
     serializer_class = RecipeSerializer
     permission_classes = (AuthorStaffOrReadOnly,)
-    pagination_class = LimitPagination
+    pagination_class = PageLimitPagination
     add_serializer = ShortRecipeSerializer
 
     def get_queryset(self) -> QuerySet[Recipe]:
@@ -118,10 +120,10 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
             query = query.filter(in_carts__user=self.request.user)
         elif is_in_cart in ('0', 'false'):
             query = query.exclude(in_carts__user=self.request.user)
-        is_favorite: str = self.request.query_params.get('is_favorited')
-        if is_favorite in ('1', 'true'):
+        is_favorited: str = self.request.query_params.get('is_favorited')
+        if is_favorited in ('1', 'true'):
             query = query.filter(in_favorites__user=self.request.user)
-        elif is_favorite in ('0', 'false'):
+        elif is_favorited in ('0', 'false'):
             query = query.exclude(in_favorites__user=self.request.user)
         return query
 

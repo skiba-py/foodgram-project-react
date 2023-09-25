@@ -79,7 +79,7 @@ class Ingredient(models.Model):
             ),
         )
 
-    def __self__(self):
+    def __str__(self):
         return f'{self.name} {self.measurement_unit}'
 
     def clean(self) -> None:
@@ -122,7 +122,7 @@ class Recipe(models.Model):
         verbose_name='Картинка',
         upload_to='recipes_images',
     )
-    description = models.TextField(
+    text = models.TextField(
         verbose_name='Описание блюда',
         max_length=1024,
     )
@@ -131,7 +131,7 @@ class Recipe(models.Model):
         default=0,
         validators=(
             MinValueValidator(1, 'Блюдо готово!',),
-            MaxValueValidator(300, 'Очень долго(',),
+            MaxValueValidator(300, 'Очень долго!',),
         ),
     ),
 
@@ -160,7 +160,7 @@ class Recipe(models.Model):
     def save(self, *args, **kwargs) -> None:
         super().save(*args, **kwargs)
         image = Image.open(self.image.path)
-        image.thumbnail(500, 500)
+        image.thumbnail((500, 500))
         image.save(self.image.path)
 
 
@@ -179,9 +179,8 @@ class AmountIngredient(models.Model):
         to=Ingredient,
         on_delete=models.CASCADE,
     )
-    amount = models.PositiveSmallIntegerField(
+    amount = models.IntegerField(
         verbose_name='Кол-во ингредиентов',
-        default=0,
         validators=(
             MinValueValidator(1, 'Нужно больше ингредиентов',),
             MaxValueValidator(30, 'Ингредиентов слишком много!'),
@@ -200,7 +199,7 @@ class AmountIngredient(models.Model):
         )
 
     def __str__(self):
-        return f'{self.amount} {self.ingredient}'
+        return f'{self.amount} {self.ingredients}'
 
 
 class Favorites(models.Model):

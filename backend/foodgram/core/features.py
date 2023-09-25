@@ -16,7 +16,7 @@ def create_recipe_ingredients(
     for ingredient, amount in ingredients.values():
         objs.append(
             AmountIngredient(
-                recipe=recipe, amount=amount, ingredients= ingredient,
+                recipe=recipe, amount=amount, ingredients=ingredient,
             )
         )
     AmountIngredient.objects.bulk_create(objs)
@@ -27,8 +27,8 @@ def create_shopping_list(user: User) -> str:
         f'Список покупок для:\n\n{user.first_name}\n'
         f'{datetime.now().strftime("%d/%m/%Y %H:%M")}\n'
     ]
-    Ingredient = apps.get_model('recipes', 'Ingredient')
-    ingredients = Ingredient.objects.filter(
+    ingredient = apps.get_model('recipes', 'Ingredient')
+    ingredients = ingredient.objects.filter(
         recipe__recipe__in_carts__user=user
     ).values(
         'name', measurement=F('measurement_unit')

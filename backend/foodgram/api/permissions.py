@@ -1,15 +1,10 @@
-from django.core.handlers.wsgi import WSGIRequest
-from django.db.models import Model
 from rest_framework.permissions import SAFE_METHODS, BasePermission
-from rest_framework.routers import APIRootView
 
 
 class AuthorStaffOrReadOnly(BasePermission):
     """Вносить изменения могут только Author и Staff."""
 
-    def has_object_permission(
-            self, request: WSGIRequest, view: APIRootView, obj: Model
-    ) -> bool:
+    def has_object_permission(self, request, view, obj) -> bool:
         return (
             request.method in SAFE_METHODS
             or request.user.is_authenticated
@@ -21,9 +16,7 @@ class AuthorStaffOrReadOnly(BasePermission):
 class AdminOrReadOnly(BasePermission):
     """Создание и редактирование только для Admin."""
 
-    def has_permission(
-            self, request: WSGIRequest, view: APIRootView
-    ) -> bool:
+    def has_permission(self, request, view) -> bool:
         return (
                 request.method in SAFE_METHODS
                 or request.user.is_authenticated
@@ -35,9 +28,7 @@ class AdminOrReadOnly(BasePermission):
 class OwnerUserOrReadOnly(BasePermission):
     """Создание и редактирование только для Owner и Admin"""
 
-    def has_object_permission(
-            self, request: WSGIRequest, view: APIRootView, obj: Model
-    ) -> bool:
+    def has_object_permission(self, request, view, obj) -> bool:
         return (
             request.method in SAFE_METHODS
             or request.user.is_authenticated
