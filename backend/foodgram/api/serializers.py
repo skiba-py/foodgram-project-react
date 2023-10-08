@@ -154,7 +154,7 @@ class RecipeSerializer(ModelSerializer):
         cooking_time = self.initial_data.get('cooking_time')
         if (not tags_id or not ingredients
            or not images or int(cooking_time) < 1):
-           raise ValidationError('Недостаточно данных.')
+            raise ValidationError('Недостаточно данных.')
         tags = tags_validator(tags_id, Tag)
         ingredients = ingredients_validator(ingredients, Ingredient)
         data.update(
