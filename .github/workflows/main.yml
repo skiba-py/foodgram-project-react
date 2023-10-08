@@ -1,9 +1,7 @@
 name: Foodgram Workflow
 
 on:
-  push:
-    branches:
-      - main
+  - push
 
 jobs:
   tests:
