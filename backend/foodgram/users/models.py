@@ -25,7 +25,7 @@ class User(AbstractUser):
         validators=(
             MinLenValidator(min_len=3, field='username',),
             RegexValidator(
-                regex='^[\w.@+-]+\Z',
+                regex=r'^[\w.@+-]+\Z',
                 message='Не должен содержать спецсимволы',
                 code='invalid_username',
             ),
@@ -37,8 +37,8 @@ class User(AbstractUser):
         help_text='Обязательно для заполнения.',
         validators=(
             StrValidator(
-                first_regex='[^а-яёА-ЯЁ -]+',
-                second_regex='[^a-zA-Z -]+',
+                first_regex=r'[^а-яёА-ЯЁ -]+',
+                second_regex=r'[^a-zA-Z -]+',
                 field='Имя',
             ),
         ),
@@ -49,8 +49,8 @@ class User(AbstractUser):
         help_text='Обязательно для заполнения.',
         validators=(
             StrValidator(
-                first_regex='[^а-яёА-ЯЁ -]+',
-                second_regex='[^a-zA-Z -]+',
+                first_regex=r'[^а-яёА-ЯЁ -]+',
+                second_regex=r'[^a-zA-Z -]+',
                 field='Фамилия',
             ),
         ),

@@ -20,6 +20,6 @@ class UserAdmin(ModelAdmin):
     )
     search_fields = ('email', 'username')
     empty_value_display = 'Значение отсутствует'
-    list_filter =  ('is_active', 'first_name', 'email')
+    list_filter = ('is_active', 'first_name', 'email')
     save_on_top = True
     list_per_page = 10

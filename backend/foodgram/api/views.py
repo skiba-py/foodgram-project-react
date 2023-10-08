@@ -5,14 +5,11 @@ from django.db.models import Q, QuerySet
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewSet
-from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
-                            Recipe, Tag)
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from users.models import Subscriptions
 
 from .mixins import AddDeleteMixin
 from .pagination import PageLimitPagination
@@ -20,6 +17,9 @@ from .permissions import AuthorStaffOrReadOnly
 from .serializers import (IngredientSerializer, RecipeSerializer,
                           ShortRecipeSerializer, TagSerializer,
                           UserSubscribeSerializer)
+from recipes.models import (Carts, Favorites, Ingredient,
+                            Recipe, Tag)
+from users.models import Subscriptions
 
 User = get_user_model()
 
@@ -45,15 +45,15 @@ class UserViewSet(DjoserUserViewSet, AddDeleteMixin):
     def delete_subscribe(
             self, request, id: int | str
     ) -> Response:
-         author = get_object_or_404(User, id=id)
-         if not Subscriptions.objects.filter(
-            user=request.user, author=author
-         ).exists():
+        author = get_object_or_404(User, id=id)
+        if not Subscriptions.objects.filter(
+           user=request.user, author=author,
+        ).exists():
             return Response(
                 {'errors': 'Вы не подписаны на этого пользователя'},
                 status=HTTP_400_BAD_REQUEST
             )
-         return self._delete_relation(Q(author__id=id))
+        return self._delete_relation(Q(author__id=id))
 
     @action(methods=('get',), detail=False)
     def subscriptions(self, request) -> Response:

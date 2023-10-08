@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.db.models import F, Sum
+
 from recipes.models import AmountIngredient, Ingredient, Recipe
 from users.models import User
 

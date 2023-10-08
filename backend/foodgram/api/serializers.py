@@ -8,10 +8,10 @@ from django.db.models import F, QuerySet
 from django.db.transaction import atomic
 from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
-from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
-                            Recipe, Tag)
 from rest_framework.serializers import (IntegerField, ModelSerializer,
                                         SerializerMethodField)
+
+from recipes.models import Carts, Favorites, Ingredient, Recipe, Tag
 
 User = get_user_model()
 
@@ -65,7 +65,7 @@ class UserSubscribeSerializer(UserInfoSerializer):
     recipes_count = SerializerMethodField()
 
     class Meta:
-        model= User
+        model = User
         fields = (
             'id', 'email', 'username', 'first_name', 'last_name',
             'is_subscribed', 'recipes', 'recipes_count',
@@ -153,8 +153,8 @@ class RecipeSerializer(ModelSerializer):
         images = self.initial_data.get('image')
         cooking_time = self.initial_data.get('cooking_time')
         if (not tags_id or not ingredients
-            or not images or int(cooking_time) < 1):
-            raise ValidationError('Недостаточно данных.')
+           or not images or int(cooking_time) < 1):
+           raise ValidationError('Недостаточно данных.')
         tags = tags_validator(tags_id, Tag)
         ingredients = ingredients_validator(ingredients, Ingredient)
         data.update(
