@@ -1,16 +1,19 @@
+import os
 from pathlib import Path
 
-from decouple import Csv, config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '-bi)-%zbd$)33#kw1r*__qnf(moz-w#s+ie5$1$n^p_v0-e4ch'
+SECRET_KEY = os.getenv('SECRET_KEY', 'default')
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'foodgram-project.serveftp.com',
+    '84.201.152.205',
+    '127.0.0.1',
+    'localhost',
+]
 
 
 INSTALLED_APPS = [
@@ -65,10 +68,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "users.User"
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'foodgram'),
+        'USER': os.getenv('POSTGRES_USER', 'foodgram_user'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', 5432)
     }
 }
 
@@ -106,25 +120,15 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
     'HIDE_USERS': False,
     'PERMISSIONS': {
-        'recipe': ('api.permissions.AuthorStaffOrReadOnly',),
-        'recipe_list': ('api.permissions.AuthorStaffOrReadOnly',),
-        'user': ('djoser.permissions.CurrentUserOrAdminOrReadOnly',),
+        'user': ('api.permissions.AuthorStaffOrReadOnly',),
         'user_list': ('rest_framework.permissions.AllowAny',),
     },
     'SERIALIZERS': {
         'user': 'api.serializers.UserInfoSerializer',
-        'user_list': 'api.serializers.UserInfoSerializer',
         'current_user': 'api.serializers.UserInfoSerializer',
         'user_create': 'api.serializers.UserSerializer',
     },
 }
-
-
-# CSRF_TRUSTED_ORIGINS = config(
-#     "CSRF_TRUSTED_ORIGINS",
-#     default="http://localhost, http://127.0.0.1",
-#     # cast=Csv(),
-# )
 
 
 # Internationalization

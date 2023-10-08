@@ -99,8 +99,7 @@ class Recipe(models.Model):
         verbose_name='Автор рецепта',
         related_name='recipes',
         to=User,
-        on_delete=models.SET_NULL,
-        null=True,
+        on_delete=models.CASCADE,
     )
     tags = models.ManyToManyField(
         verbose_name='Тег',
@@ -133,7 +132,7 @@ class Recipe(models.Model):
             MinValueValidator(1, 'Блюдо готово!',),
             MaxValueValidator(300, 'Очень долго!',),
         ),
-    ),
+    )
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -156,12 +155,12 @@ class Recipe(models.Model):
     def clean(self) -> None:
         self.name = self.name.capitalize()
         return super().clean()
-
-    def save(self, *args, **kwargs) -> None:
-        super().save(*args, **kwargs)
-        image = Image.open(self.image.path)
-        image.thumbnail((500, 500))
-        image.save(self.image.path)
+    #
+    # def save(self, *args, **kwargs) -> None:
+    #     super().save(*args, **kwargs)
+    #     image = Image.open(self.image.path)
+    #     image.thumbnail((500, 500))
+    #     image.save(self.image.path)
 
 
 class AmountIngredient(models.Model):

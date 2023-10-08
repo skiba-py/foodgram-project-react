@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from django.apps import apps
 from django.db.models import F, Sum
 
 from recipes.models import AmountIngredient, Ingredient, Recipe
@@ -27,14 +26,14 @@ def create_shopping_list(user: User) -> str:
         f'Список покупок для:\n\n{user.first_name}\n'
         f'{datetime.now().strftime("%d/%m/%Y %H:%M")}\n'
     ]
-    ingredient = apps.get_model('recipes', 'Ingredient')
-    ingredients = ingredient.objects.filter(
-        recipe__recipe__in_carts__user=user
+    ingredients = AmountIngredient.objects.filter(
+        recipe__in_carts__user=user
     ).values(
-        'name', measurement=F('measurement_unit')
-    ).annotate(amount=Sum('recipe_amount'))
+        'ingredients__name', measurement=F('ingredients__measurement_unit')
+    ).annotate(amount=Sum('amount'))
+
     ingredient_list = (
-        f'{ing["name"]}: {ing["amount"]} {ing["measurement"]}'
+        f'{ing["ingredients__name"]}: {ing["amount"]} {ing["measurement"]}'
         for ing in ingredients
     )
     shopping_list.extend(ingredient_list)

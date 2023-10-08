@@ -4,12 +4,15 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.models import F, QuerySet
 from django.db.transaction import atomic
-from drf_extra_fields.fields import Base64ImageField
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, IntegerField, CharField
 from djoser.serializers import UserCreateSerializer
+from drf_extra_fields.fields import Base64ImageField
+from rest_framework.serializers import (IntegerField, ModelSerializer,
+                                        SerializerMethodField)
+
 from core.features import create_recipe_ingredients
 from core.validators import ingredients_validator, tags_validator
-from recipes.models import Ingredient, Recipe, Tag, Favorites, Carts, AmountIngredient
+from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
+                            Recipe, Tag)
 
 User = get_user_model()
 
@@ -36,7 +39,7 @@ class UserSerializer(UserCreateSerializer):
 
 
 class UserInfoSerializer(UserSerializer):
-    """Сериализатор для использования с моделью User."""
+    """Сериализатор для получения информации о пользователе."""
 
     is_subscribed = SerializerMethodField()
 
@@ -49,15 +52,14 @@ class UserInfoSerializer(UserSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def get_is_subscribed(self, obj: User) -> bool:
-        """Проверка подписки пользователей."""
-        user = self.context.get('request').user
-        if user.is_anonymous or (user == obj):
-            return False
-        return user.subscriptions.filter(author=obj).exists()
+        """Проверка подписки пользователя."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.subscribers.filter(user=request.user).exists()
+        return False
 
-# cd -; bash clear_db.sh; cd -; python3 manage.py runserver
 
-class UserSubscribeSerializer(UserSerializer):
+class UserSubscribeSerializer(UserInfoSerializer):
     """Вывод подписок пользователя."""
 
     recipes = ShortRecipeSerializer(many=True, read_only=True)
@@ -66,14 +68,13 @@ class UserSubscribeSerializer(UserSerializer):
     class Meta:
         model= User
         fields = (
-            # 'id',
-            'email', 'username', 'first_name', 'last_name',
+            'id', 'email', 'username', 'first_name', 'last_name',
             'is_subscribed', 'recipes', 'recipes_count',
         )
         read_only_fields = ('__all__',)
 
     def get_recipes_count(self, obj: User) -> int:
-        return obj.recipes_count()
+        return obj.recipes.count()
 
 
 class TagSerializer(ModelSerializer):
@@ -106,7 +107,7 @@ class RecipeSerializer(ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     ingredients = SerializerMethodField()
     is_favorited = SerializerMethodField()
-    is_in_cart = SerializerMethodField()
+    is_in_shopping_cart = SerializerMethodField()
     image = Base64ImageField()
     cooking_time = IntegerField()
 
@@ -114,9 +115,9 @@ class RecipeSerializer(ModelSerializer):
         model = Recipe
         fields = (
             'id', 'tags', 'author', 'ingredients', 'is_favorited',
-            'is_in_cart', 'name', 'image', 'text', 'cooking_time',
+            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
         )
-        read_only_fields = ('is_favorited', 'is_in_cart', 'cooking_time')
+        read_only_fields = ('is_favorited', 'is_in_shopping_cart', 'cooking_time')
 
     def get_ingredients(self, recipe: Recipe) -> QuerySet[dict]:
         ingredients = recipe.ingredients.values(
@@ -131,7 +132,7 @@ class RecipeSerializer(ModelSerializer):
                     user=request.user, recipe=obj
                 ).exists())
 
-    def get_is_in_cart(self, obj):
+    def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
         return (request and request.user.is_authenticated
                 and Carts.objects.filter(
@@ -148,7 +149,10 @@ class RecipeSerializer(ModelSerializer):
 
         tags_id = self.initial_data.get('tags')
         ingredients = self.initial_data.get('ingredients')
-        if not tags_id or not ingredients:
+        images = self.initial_data.get('image')
+        cooking_time = self.initial_data.get('cooking_time')
+        if (not tags_id or not ingredients
+            or not images or int(cooking_time) < 1):
             raise ValidationError('Недостаточно данных.')
         tags = tags_validator(tags_id, Tag)
         ingredients = ingredients_validator(ingredients, Ingredient)

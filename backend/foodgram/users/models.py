@@ -1,6 +1,8 @@
-from django.contrib.auth.models import AbstractUser
-from django.db import models
 import unicodedata
+
+from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
+from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.db.models.functions import Length
 
@@ -25,7 +27,11 @@ class User(AbstractUser):
         help_text='Обязательно для заполнения.',
         validators=(
             MinLenValidator(min_len=3, field='username',),
-            # StrValidator(field='username'),
+            RegexValidator(
+                regex='^[\w.@+-]+\Z',
+                message='Не должен содержать спецсимволы',
+                code='invalid_username',
+            ),
         )
     )
     first_name = models.CharField(
@@ -75,6 +81,14 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return f'{self.username}: {self.email}'
+
+    @property
+    def is_subscribed(self):
+        user = self
+        request = self._request
+        if request.user.is_anonymous or (request.user == user):
+            return False
+        return request.user.subscriptions.filter(author=user).exists()
 
     @classmethod
     def normalize_email(cls, email: str) -> str:

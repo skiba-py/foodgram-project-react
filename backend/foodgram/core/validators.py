@@ -85,38 +85,37 @@ def hex_color_validator(color: str) -> str:
 
 def tags_validator(tags_ids: list[int | str], Tag: 'Tag') -> list['Tag']:
     """Проверяет наличие тэгов с указанными id."""
-    if not tags_ids:
-        raise ValidationError('Не указаны тэги')
+
     tags = Tag.objects.filter(id__in=tags_ids)
     if len(tags) != len(tags_ids):
         raise ValidationError('Указан несуществующий тэг')
     return tags
 
-
 def ingredients_validator(
     ingredients: list[dict[str, str | int]],
     Ingredient: 'Ingredient',
 ) -> dict[int, tuple['Ingredient', int]]:
-    """Проверяет список ингридиентов."""
-    if not ingredients:
-        raise ValidationError('Не указаны ингридиенты')
+    """Проверяет список ингредиентов."""
 
     valid_ings = {}
 
     for ing in ingredients:
-        if not (isinstance(ing['amount'], int) or ing['amount'].isdigit()):
-            raise ValidationError('Неправильное количество ингидиента')
+        if (not (isinstance(ing['amount'], int)
+            or ing['amount'].isdigit()) or int(ing['amount']) <= 0):
+            raise ValidationError('Неправильное количество ингредиента')
 
+        if ing['id'] in valid_ings:
+            raise ValidationError('Нельзя добавлять одинаковые ингредиенты')
         valid_ings[ing['id']] = int(ing['amount'])
         if valid_ings[ing['id']] <= 0:
-            raise ValidationError('Неправильное количество ингридиента')
+            raise ValidationError('Неправильное количество ингредиента')
 
     if not valid_ings:
-        raise ValidationError('Неправильные ингидиенты')
+        raise ValidationError('Неправильные ингредиенты')
 
     db_ings = Ingredient.objects.filter(pk__in=valid_ings.keys())
     if not db_ings:
-        raise ValidationError('Неправильные ингидиенты')
+        raise ValidationError('Неправильные ингредиенты')
 
     for ing in db_ings:
         valid_ings[ing.pk] = (ing, valid_ings[ing.pk])

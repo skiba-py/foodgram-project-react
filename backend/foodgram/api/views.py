@@ -1,24 +1,26 @@
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
-from django.db.models import Q, QuerySet, Sum
+from django.db.models import Q, QuerySet
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from core.features import create_shopping_list
-from recipes.models import Carts, Favorites, Ingredient, Recipe, Tag, AmountIngredient
+from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
+                            Recipe, Tag)
 from users.models import Subscriptions
 
 from .mixins import AddDeleteMixin
 from .pagination import PageLimitPagination
 from .permissions import AuthorStaffOrReadOnly
-from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated, AllowAny
 from .serializers import (IngredientSerializer, RecipeSerializer,
                           ShortRecipeSerializer, TagSerializer,
-                          UserSubscribeSerializer,)
+                          UserSubscribeSerializer)
 
 User = get_user_model()
 
@@ -26,10 +28,10 @@ User = get_user_model()
 class UserViewSet(DjoserUserViewSet, AddDeleteMixin):
     """Вьюсет для работы с пользователями."""
 
-    pagination_class = PageLimitPagination
-    permission_classes = (DjangoModelPermissions,)
+    # permission_classes = (IsAuthenticatedOrReadOnly,)
     add_serializer = UserSubscribeSerializer
     link_model = Subscriptions
+    pagination_class = PageLimitPagination
 
     @action(detail=True, permission_classes=(IsAuthenticated,))
     def subscribe(self, request: WSGIRequest, id: int | str) -> Response:
@@ -37,22 +39,27 @@ class UserViewSet(DjoserUserViewSet, AddDeleteMixin):
 
     @subscribe.mapping.post
     def create_subscribe(
-            self, request: WSGIRequest, id: int | str
+            self, request, id: int | str
     ) -> Response:
         return self._create_relation(id)
 
     @subscribe.mapping.delete
     def delete_subscribe(
-            self, request: WSGIRequest, id: int | str
+            self, request, id: int | str
     ) -> Response:
-        return self._delete_relation(Q(author__id=id))
+         author = get_object_or_404(User, id=id)
+         if not Subscriptions.objects.filter(
+            user=request.user, author=author
+         ).exists():
+            return Response(
+                {'errors': 'Вы не подписаны на этого пользователя'},
+                status=HTTP_400_BAD_REQUEST
+            )
+         return self._delete_relation(Q(author__id=id))
 
-    @action(
-        methods=('get',), detail=False, permission_classes=IsAuthenticated
-    )
-    def subscriptions(self, request: WSGIRequest) -> Response:
+    @action(methods=('get',), detail=False)
+    def subscriptions(self, request) -> Response:
         """Подписки."""
-
         pages = self.paginate_queryset(
             User.objects.filter(subscribers__user=self.request.user)
         )
@@ -99,8 +106,8 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
     queryset = Recipe.objects.select_related('author')
     serializer_class = RecipeSerializer
     permission_classes = (AuthorStaffOrReadOnly,)
-    pagination_class = PageLimitPagination
     add_serializer = ShortRecipeSerializer
+    pagination_class = PageLimitPagination
 
     def get_queryset(self) -> QuerySet[Recipe]:
         """Получает queryset."""
@@ -112,19 +119,20 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
         author: str = self.request.query_params.get('author')
         if author:
             query = query.filter(author=author)
+
         if self.request.user.is_anonymous:
             return query
 
-        is_in_cart: str = self.request.query_params.get('is_in_cart')
-        if is_in_cart in ('1', 'true'):
+        is_in_shopping_cart: str = self.request.query_params.get('is_in_shopping_cart')
+        if is_in_shopping_cart in ('1', 'true'):
             query = query.filter(in_carts__user=self.request.user)
-        elif is_in_cart in ('0', 'false'):
+        elif is_in_shopping_cart in ('0', 'false'):
             query = query.exclude(in_carts__user=self.request.user)
         is_favorited: str = self.request.query_params.get('is_favorited')
         if is_favorited in ('1', 'true'):
-            query = query.filter(in_favorites__user=self.request.user)
+            query = query.filter(favorites__user=self.request.user)
         elif is_favorited in ('0', 'false'):
-            query = query.exclude(in_favorites__user=self.request.user)
+            query = query.exclude(favorites__user=self.request.user)
         return query
 
     @action(detail=True, permission_classes=(IsAuthenticated,))
@@ -143,6 +151,11 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
             self, request: WSGIRequest, pk: int | str
     ) -> Response:
         self.link_model = Favorites
+        recipe = get_object_or_404(Recipe, id=pk)
+        if not Favorites.objects.filter(
+                user=request.user, recipe=recipe
+        ).exists():
+            return Response(status=HTTP_400_BAD_REQUEST)
         return self._delete_relation(Q(recipe__id=pk))
 
     @action(detail=True, permission_classes=(IsAuthenticated,))
@@ -161,15 +174,18 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
             self, request: WSGIRequest, pk: int | str
     ) -> Response:
         self.link_model = Carts
+        recipe = get_object_or_404(Recipe, id=pk)
+        if not Carts.objects.filter(
+                user=request.user, recipe=recipe
+        ).exists():
+            return Response(status=HTTP_400_BAD_REQUEST)
         return self._delete_relation(Q(recipe__id=pk))
 
     @action(methods=('get',), detail=False)
-    def download_cart(self, request: WSGIRequest) -> Response | HttpResponse:
+    def download_shopping_cart(self, request: WSGIRequest) -> Response | HttpResponse:
         """Скачивает файл Carts."""
 
         user = self.request.user
-        if not user.carts.exists():
-            return Response(status=HTTP_400_BAD_REQUEST)
         filename = f'{user.username}_shopping_list.txt'
         shopping_list = create_shopping_list(user)
         response = HttpResponse(
