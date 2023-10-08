@@ -1,18 +1,17 @@
+from core.features import create_shopping_list
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import Q, QuerySet
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewSet
+from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
+                            Recipe, Tag)
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-
-from core.features import create_shopping_list
-from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
-                            Recipe, Tag)
 from users.models import Subscriptions
 
 from .mixins import AddDeleteMixin

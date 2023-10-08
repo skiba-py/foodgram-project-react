@@ -1,12 +1,11 @@
 import unicodedata
 
+from core.validators import MinLenValidator, StrValidator
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.db.models.functions import Length
-
-from core.validators import MinLenValidator, StrValidator
 
 models.CharField.register_lookup(Length)
 
