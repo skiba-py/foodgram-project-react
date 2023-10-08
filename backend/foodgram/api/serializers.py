@@ -116,7 +116,9 @@ class RecipeSerializer(ModelSerializer):
             'id', 'tags', 'author', 'ingredients', 'is_favorited',
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
         )
-        read_only_fields = ('is_favorited', 'is_in_shopping_cart', 'cooking_time')
+        read_only_fields = (
+            'is_favorited', 'is_in_shopping_cart', 'cooking_time',
+        )
 
     def get_ingredients(self, recipe: Recipe) -> QuerySet[dict]:
         ingredients = recipe.ingredients.values(

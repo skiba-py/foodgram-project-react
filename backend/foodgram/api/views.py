@@ -27,7 +27,6 @@ User = get_user_model()
 class UserViewSet(DjoserUserViewSet, AddDeleteMixin):
     """Вьюсет для работы с пользователями."""
 
-    # permission_classes = (IsAuthenticatedOrReadOnly,)
     add_serializer = UserSubscribeSerializer
     link_model = Subscriptions
     pagination_class = PageLimitPagination
@@ -122,7 +121,9 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
         if self.request.user.is_anonymous:
             return query
 
-        is_in_shopping_cart: str = self.request.query_params.get('is_in_shopping_cart')
+        is_in_shopping_cart: str = self.request.query_params.get(
+            'is_in_shopping_cart'
+        )
         if is_in_shopping_cart in ('1', 'true'):
             query = query.filter(in_carts__user=self.request.user)
         elif is_in_shopping_cart in ('0', 'false'):
@@ -181,7 +182,7 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
         return self._delete_relation(Q(recipe__id=pk))
 
     @action(methods=('get',), detail=False)
-    def download_shopping_cart(self, request: WSGIRequest) -> Response | HttpResponse:
+    def download_shopping_cart(self, request) -> Response | HttpResponse:
         """Скачивает файл Carts."""
 
         user = self.request.user

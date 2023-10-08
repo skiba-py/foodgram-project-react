@@ -1,5 +1,3 @@
-import unicodedata
-
 from core.validators import MinLenValidator, StrValidator
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
@@ -101,10 +99,6 @@ class User(AbstractUser):
         else:
             email = email_name.lower() + '@' + domain_part.lower()
         return email
-    #
-    # @classmethod
-    # def normalize_username(cls, username: str) -> str:
-    #     return unicodedata.normalize('NFKC', username).capitalize()
 
     def __normalize_human_names(self, name: str) -> str:
         """Нормализует имена и фамилии."""
