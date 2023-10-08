@@ -46,9 +46,8 @@ class UserViewSet(DjoserUserViewSet, AddDeleteMixin):
             self, request, id: int | str
     ) -> Response:
         author = get_object_or_404(User, id=id)
-        if not Subscriptions.objects.filter(
-           user=request.user, author=author,
-        ).exists():
+        if not Subscriptions.objects.filter(user=request.user,
+                                            author=author).exists():
             return Response(
                 {'errors': 'Вы не подписаны на этого пользователя'},
                 status=HTTP_400_BAD_REQUEST
