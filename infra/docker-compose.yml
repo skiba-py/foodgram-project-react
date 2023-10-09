@@ -31,7 +31,6 @@ services:
   gateway:
     container_name: gateway
     image: nginx:1.23.3-alpine
-    restart: always
     depends_on:
       - db
       - backend
