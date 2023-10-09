@@ -12,7 +12,6 @@ from rest_framework.serializers import (IntegerField, ModelSerializer,
                                         SerializerMethodField)
 
 from recipes.models import Carts, Favorites, Ingredient, Recipe, Tag
-from users.models import Subscriptions
 
 User = get_user_model()
 
