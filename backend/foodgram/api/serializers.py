@@ -12,6 +12,7 @@ from rest_framework.serializers import (IntegerField, ModelSerializer,
                                         SerializerMethodField)
 
 from recipes.models import Carts, Favorites, Ingredient, Recipe, Tag
+from users.models import Subscriptions
 
 User = get_user_model()
 
@@ -51,10 +52,10 @@ class UserInfoSerializer(UserSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def get_is_subscribed(self, obj: User) -> bool:
-        """Проверка подписки пользователя."""
+        """Проверка подписки на пользователя."""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.subscribers.filter(user=request.user).exists()
+            return obj.subscriptions.filter(user=request.user).exists()
         return False
 
 

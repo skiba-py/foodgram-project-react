@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'default')
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     'foodgram-project.serveftp.com',

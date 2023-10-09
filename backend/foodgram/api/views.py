@@ -58,7 +58,7 @@ class UserViewSet(DjoserUserViewSet, AddDeleteMixin):
     def subscriptions(self, request) -> Response:
         """Подписки."""
         pages = self.paginate_queryset(
-            User.objects.filter(subscribers__user=self.request.user)
+            User.objects.filter(subscriptions__user=self.request.user)
         )
         serializer = UserSubscribeSerializer(pages, many=True)
         return self.get_paginated_response(serializer.data)

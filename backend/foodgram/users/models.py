@@ -79,14 +79,6 @@ class User(AbstractUser):
     def __str__(self) -> str:
         return f'{self.username}: {self.email}'
 
-    @property
-    def is_subscribed(self):
-        user = self
-        request = self._request
-        if request.user.is_anonymous or (request.user == user):
-            return False
-        return request.user.subscriptions.filter(author=user).exists()
-
     @classmethod
     def normalize_email(cls, email: str) -> str:
         """Normalize the email address by lowercasing the domain part of it"""
