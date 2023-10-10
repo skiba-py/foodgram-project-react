@@ -32,10 +32,10 @@ class AdminOrReadOnly(BasePermission):
 
     def has_permission(self, request, view) -> bool:
         return (
-                request.method in SAFE_METHODS
-                or request.user.is_authenticated
-                and request.user.is_active
-                and request.user.is_staff
+            request.method in SAFE_METHODS
+            or request.user.is_authenticated
+            and request.user.is_active
+            and request.user.is_staff
         )
 
 
