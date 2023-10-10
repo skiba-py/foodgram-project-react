@@ -17,8 +17,7 @@ from .permissions import AuthorStaffOrReadOnly
 from .serializers import (IngredientSerializer, RecipeSerializer,
                           ShortRecipeSerializer, TagSerializer,
                           UserSubscribeSerializer)
-from recipes.models import (Carts, Favorites, Ingredient,
-                            Recipe, Tag)
+from recipes.models import Carts, Favorites, Ingredient, Recipe, Tag
 from users.models import Subscriptions
 
 User = get_user_model()
