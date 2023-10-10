@@ -3,7 +3,10 @@ import csv
 from django.apps import apps
 from django.conf import settings
 from django.core.management import BaseCommand
-from django.shortcuts import get_object_or_404
+
+from recipes.models import Ingredient
+
+# from django.shortcuts import get_object_or_404
 
 MODELS_FIELDS = {}
 
@@ -30,12 +33,19 @@ class Command(BaseCommand):
                 'rt',
                 encoding='utf-8',
         ) as csv_file:
-            reader = csv.DictReader(csv_file, delimiter=',')
-            for row in reader:
-                for field, value in row.items():
-                    if field in MODELS_FIELDS.keys():
-                        row[field] = get_object_or_404(
-                            MODELS_FIELDS[field], pk=value
-                        )
-                model.objects.create(**row)
+            file_reader = csv.reader(csv_file)
+            for row in file_reader:
+                name, measurement_unit = row
+                Ingredient.objects.get_or_create(
+                    name=name,
+                    measurement_unit=measurement_unit,
+                )
+            # reader = csv.DictReader(csv_file, delimiter=',')
+            # for row in reader:
+            #     for field, value in row.items():
+            #         if field in MODELS_FIELDS.keys():
+            #             row[field] = get_object_or_404(
+            #                 MODELS_FIELDS[field], pk=value
+            #             )
+            #     model.objects.create(**row)
         self.stdout.write(self.style.SUCCESS('Все данные загружены'))
