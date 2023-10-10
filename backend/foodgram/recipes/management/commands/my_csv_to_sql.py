@@ -26,7 +26,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # file_path = options['path']
         # model = apps.get_model(options['app_name'], options['model_name'])
-        model = apps.get_model('recipes', 'Ingredient')
+        # model = apps.get_model('recipes', 'Ingredient')
         with open(
                 # file_path,
                 f'{settings.BASE_DIR}/data/ingredients.csv',
