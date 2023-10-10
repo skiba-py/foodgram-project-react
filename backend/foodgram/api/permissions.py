@@ -8,9 +8,6 @@ class AuthorStaffOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.user.is_anonymous and 'me' in request.path:
             return False
-            # raise PermissionDenied(
-            #     detail="You must be authenticated to access this resource."
-            # )
         return (
             request.method in SAFE_METHODS
             or request.user.is_authenticated

@@ -91,6 +91,7 @@ def tags_validator(tags_ids: list[int | str], Tag: 'Tag') -> list['Tag']:
         raise ValidationError('Указан несуществующий тэг')
     return tags
 
+
 def ingredients_validator(
     ingredients: list[dict[str, str | int]],
     Ingredient: 'Ingredient',
@@ -101,7 +102,7 @@ def ingredients_validator(
 
     for ing in ingredients:
         if (not (isinstance(ing['amount'], int)
-            or ing['amount'].isdigit()) or int(ing['amount']) <= 0):
+           or ing['amount'].isdigit()) or int(ing['amount']) <= 0):
             raise ValidationError('Неправильное количество ингредиента')
 
         if ing['id'] in valid_ings:

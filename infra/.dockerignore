@@ -1,0 +1,4 @@
+docker-compose.production.yml
+docker-compose.yml
+*/dockerignore
+Dockerfile

@@ -1,12 +1,9 @@
-import unicodedata
-
+from core.validators import MinLenValidator, StrValidator
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.db.models.functions import Length
-
-from core.validators import MinLenValidator, StrValidator
 
 models.CharField.register_lookup(Length)
 
@@ -28,7 +25,7 @@ class User(AbstractUser):
         validators=(
             MinLenValidator(min_len=3, field='username',),
             RegexValidator(
-                regex='^[\w.@+-]+\Z',
+                regex=r'^[\w.@+-]+\Z',
                 message='Не должен содержать спецсимволы',
                 code='invalid_username',
             ),
@@ -40,8 +37,8 @@ class User(AbstractUser):
         help_text='Обязательно для заполнения.',
         validators=(
             StrValidator(
-                first_regex='[^а-яёА-ЯЁ -]+',
-                second_regex='[^a-zA-Z -]+',
+                first_regex=r'[^а-яёА-ЯЁ -]+',
+                second_regex=r'[^a-zA-Z -]+',
                 field='Имя',
             ),
         ),
@@ -52,8 +49,8 @@ class User(AbstractUser):
         help_text='Обязательно для заполнения.',
         validators=(
             StrValidator(
-                first_regex='[^а-яёА-ЯЁ -]+',
-                second_regex='[^a-zA-Z -]+',
+                first_regex=r'[^а-яёА-ЯЁ -]+',
+                second_regex=r'[^a-zA-Z -]+',
                 field='Фамилия',
             ),
         ),
@@ -82,14 +79,6 @@ class User(AbstractUser):
     def __str__(self) -> str:
         return f'{self.username}: {self.email}'
 
-    @property
-    def is_subscribed(self):
-        user = self
-        request = self._request
-        if request.user.is_anonymous or (request.user == user):
-            return False
-        return request.user.subscriptions.filter(author=user).exists()
-
     @classmethod
     def normalize_email(cls, email: str) -> str:
         """Normalize the email address by lowercasing the domain part of it"""
@@ -102,10 +91,6 @@ class User(AbstractUser):
         else:
             email = email_name.lower() + '@' + domain_part.lower()
         return email
-    #
-    # @classmethod
-    # def normalize_username(cls, username: str) -> str:
-    #     return unicodedata.normalize('NFKC', username).capitalize()
 
     def __normalize_human_names(self, name: str) -> str:
         """Нормализует имена и фамилии."""

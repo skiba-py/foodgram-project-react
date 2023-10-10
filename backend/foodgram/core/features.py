@@ -20,6 +20,7 @@ def create_recipe_ingredients(
         )
     AmountIngredient.objects.bulk_create(objs)
 
+
 def create_shopping_list(user: User) -> str:
     """Создает список покупок."""
     shopping_list = [

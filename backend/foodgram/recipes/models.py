@@ -1,10 +1,8 @@
+from core.validators import StrValidator, hex_color_validator
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.functions import Length
-from PIL import Image
-
-from core.validators import StrValidator, hex_color_validator
 
 models.CharField.register_lookup(Length)
 

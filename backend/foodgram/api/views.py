@@ -1,3 +1,4 @@
+from core.features import create_shopping_list
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import Q, QuerySet
@@ -10,17 +11,14 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from core.features import create_shopping_list
-from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
-                            Recipe, Tag)
-from users.models import Subscriptions
-
 from .mixins import AddDeleteMixin
 from .pagination import PageLimitPagination
 from .permissions import AuthorStaffOrReadOnly
 from .serializers import (IngredientSerializer, RecipeSerializer,
                           ShortRecipeSerializer, TagSerializer,
                           UserSubscribeSerializer)
+from recipes.models import Carts, Favorites, Ingredient, Recipe, Tag
+from users.models import Subscriptions
 
 User = get_user_model()
 
@@ -28,7 +26,6 @@ User = get_user_model()
 class UserViewSet(DjoserUserViewSet, AddDeleteMixin):
     """Вьюсет для работы с пользователями."""
 
-    # permission_classes = (IsAuthenticatedOrReadOnly,)
     add_serializer = UserSubscribeSerializer
     link_model = Subscriptions
     pagination_class = PageLimitPagination
@@ -47,21 +44,20 @@ class UserViewSet(DjoserUserViewSet, AddDeleteMixin):
     def delete_subscribe(
             self, request, id: int | str
     ) -> Response:
-         author = get_object_or_404(User, id=id)
-         if not Subscriptions.objects.filter(
-            user=request.user, author=author
-         ).exists():
+        author = get_object_or_404(User, id=id)
+        if not Subscriptions.objects.filter(user=request.user,
+                                            author=author).exists():
             return Response(
                 {'errors': 'Вы не подписаны на этого пользователя'},
                 status=HTTP_400_BAD_REQUEST
             )
-         return self._delete_relation(Q(author__id=id))
+        return self._delete_relation(Q(author__id=id))
 
     @action(methods=('get',), detail=False)
     def subscriptions(self, request) -> Response:
         """Подписки."""
         pages = self.paginate_queryset(
-            User.objects.filter(subscribers__user=self.request.user)
+            User.objects.filter(subscriptions__user=self.request.user)
         )
         serializer = UserSubscribeSerializer(pages, many=True)
         return self.get_paginated_response(serializer.data)
@@ -123,7 +119,9 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
         if self.request.user.is_anonymous:
             return query
 
-        is_in_shopping_cart: str = self.request.query_params.get('is_in_shopping_cart')
+        is_in_shopping_cart: str = self.request.query_params.get(
+            'is_in_shopping_cart'
+        )
         if is_in_shopping_cart in ('1', 'true'):
             query = query.filter(in_carts__user=self.request.user)
         elif is_in_shopping_cart in ('0', 'false'):
@@ -182,7 +180,7 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
         return self._delete_relation(Q(recipe__id=pk))
 
     @action(methods=('get',), detail=False)
-    def download_shopping_cart(self, request: WSGIRequest) -> Response | HttpResponse:
+    def download_shopping_cart(self, request) -> Response | HttpResponse:
         """Скачивает файл Carts."""
 
         user = self.request.user

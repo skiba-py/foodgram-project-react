@@ -29,7 +29,7 @@ class AddDeleteMixin:
 
         if self.link_model == Subscriptions:
             try:
-                author = User.objects.get(pk=obj_id)
+                User.objects.get(pk=obj_id)
             except User.DoesNotExist:
                 return Response(
                     {'error': 'Автор не существует.'},

@@ -1,5 +1,7 @@
 from collections import OrderedDict
 
+from core.features import create_recipe_ingredients
+from core.validators import ingredients_validator, tags_validator
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.models import F, QuerySet
@@ -9,10 +11,7 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework.serializers import (IntegerField, ModelSerializer,
                                         SerializerMethodField)
 
-from core.features import create_recipe_ingredients
-from core.validators import ingredients_validator, tags_validator
-from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
-                            Recipe, Tag)
+from recipes.models import Carts, Favorites, Ingredient, Recipe, Tag
 
 User = get_user_model()
 
@@ -52,10 +51,10 @@ class UserInfoSerializer(UserSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def get_is_subscribed(self, obj: User) -> bool:
-        """Проверка подписки пользователя."""
+        """Проверка подписки на пользователя."""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.subscribers.filter(user=request.user).exists()
+            return obj.subscriptions.filter(user=request.user).exists()
         return False
 
 
@@ -66,7 +65,7 @@ class UserSubscribeSerializer(UserInfoSerializer):
     recipes_count = SerializerMethodField()
 
     class Meta:
-        model= User
+        model = User
         fields = (
             'id', 'email', 'username', 'first_name', 'last_name',
             'is_subscribed', 'recipes', 'recipes_count',
@@ -117,7 +116,9 @@ class RecipeSerializer(ModelSerializer):
             'id', 'tags', 'author', 'ingredients', 'is_favorited',
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
         )
-        read_only_fields = ('is_favorited', 'is_in_shopping_cart', 'cooking_time')
+        read_only_fields = (
+            'is_favorited', 'is_in_shopping_cart', 'cooking_time',
+        )
 
     def get_ingredients(self, recipe: Recipe) -> QuerySet[dict]:
         ingredients = recipe.ingredients.values(
@@ -152,7 +153,7 @@ class RecipeSerializer(ModelSerializer):
         images = self.initial_data.get('image')
         cooking_time = self.initial_data.get('cooking_time')
         if (not tags_id or not ingredients
-            or not images or int(cooking_time) < 1):
+           or not images or int(cooking_time) < 1):
             raise ValidationError('Недостаточно данных.')
         tags = tags_validator(tags_id, Tag)
         ingredients = ingredients_validator(ingredients, Ingredient)
