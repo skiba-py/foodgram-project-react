@@ -4,7 +4,6 @@ volumes:
   pg_data_foodgram:
   static_foodgram:
   media_foodgram:
-  static:
 
 services:
 
@@ -18,8 +17,8 @@ services:
     image: ivan0py/foodgram_backend
     env_file: .env
     volumes:
-      - static_foodgram:/app/static
-      - media_foodgram:/app/media
+      - static_foodgram:/app/static/
+      - media_foodgram:/app/media/
     depends_on:
       - db
 
@@ -28,7 +27,7 @@ services:
     env_file: .env
     command: cp -r /app/build/. /frontend_static/
     volumes:
-      - static:/app/result_build/build
+      - ./frontend/:/app/result_build/
 
   gateway:
     container_name: gateway
@@ -43,7 +42,7 @@ services:
       - frontend
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - static:/usr/share/nginx/html/
-      - ../docs/:/usr/share/nginx/html/api/docs/
+      - ./frontend/build:/usr/share/nginx/html/
+      - ./docs/:/usr/share/nginx/html/api/docs/
       - static_foodgram:/etc/nginx/html/static/
       - media_foodgram:/etc/nginx/html/media/
