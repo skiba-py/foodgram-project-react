@@ -1,6 +1,6 @@
 import csv
 
-from django.apps import apps
+# from django.apps import apps
 from django.conf import settings
 from django.core.management import BaseCommand
 
