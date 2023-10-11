@@ -4,7 +4,8 @@ from django.utils.html import format_html
 from django.utils.safestring import SafeString, mark_safe
 
 from recipes.forms import TagForm
-from recipes.models import AmountIngredient, Carts, Favorites, Ingredient, Recipe, Tag
+from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
+                            Recipe, Tag)
 
 EMPTY = "Значение отсутствует"
 
@@ -31,7 +32,11 @@ class IngredientAdmin(ModelAdmin):
 @register(Recipe)
 class RecipeAdmin(ModelAdmin):
     list_display = ("name", "author", "get_image", "count_favorites")
-    fields = (("name", "cooking_time"), ("author", "tags"), ("text",), ("image",))
+    fields = (
+        ("name", "cooking_time"),
+        ("author", "tags"),
+        ("text",), ("image",),
+    )
     raw_id_fields = ("author",)
     search_fields = ("name", "author__username", "tags__name")
     list_filter = ("name", "author__username", "tags__name")

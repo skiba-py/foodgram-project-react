@@ -30,7 +30,10 @@ def create_shopping_list(user: User) -> str:
     ]
     ingredients = (
         AmountIngredient.objects.filter(recipe__in_carts__user=user)
-        .values("ingredients__name", measurement=F("ingredients__measurement_unit"))
+        .values(
+            "ingredients__name",
+            measurement=F("ingredients__measurement_unit")
+        )
         .annotate(amount=Sum("amount"))
     )
 

@@ -45,7 +45,9 @@ class UserViewSet(DjoserUserViewSet, AddDeleteMixin):
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id: int | str) -> Response:
         author = get_object_or_404(User, id=id)
-        if not Subscriptions.objects.filter(user=request.user, author=author).exists():
+        if not Subscriptions.objects.filter(
+                user=request.user, author=author
+        ).exists():
             return Response(
                 {"errors": "Вы не подписаны на этого пользователя"},
                 status=HTTP_400_BAD_REQUEST,
@@ -116,7 +118,9 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
         if self.request.user.is_anonymous:
             return query
 
-        is_in_shopping_cart: str = self.request.query_params.get("is_in_shopping_cart")
+        is_in_shopping_cart: str = self.request.query_params.get(
+            "is_in_shopping_cart"
+        )
         if is_in_shopping_cart in ("1", "true"):
             query = query.filter(in_carts__user=self.request.user)
         elif is_in_shopping_cart in ("0", "false"):
@@ -133,7 +137,7 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
         """Добавляет или удаляет рецеп из Favorites."""
 
     @favorite.mapping.post
-    def put_recipe_to_favorites(self, request: WSGIRequest, pk: int | str) -> Response:
+    def put_recipe_to_favorites(self, request, pk: int | str) -> Response:
         self.link_model = Favorites
         return self._create_relation(pk)
 
@@ -143,24 +147,28 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
     ) -> Response:
         self.link_model = Favorites
         recipe = get_object_or_404(Recipe, id=pk)
-        if not Favorites.objects.filter(user=request.user, recipe=recipe).exists():
+        if not Favorites.objects.filter(
+                user=request.user, recipe=recipe
+        ).exists():
             return Response(status=HTTP_400_BAD_REQUEST)
         return self._delete_relation(Q(recipe__id=pk))
 
     @action(detail=True, permission_classes=(IsAuthenticated,))
-    def shopping_cart(self, request: WSGIRequest, pk: int | str) -> Response:
+    def shopping_cart(self, request, pk: int | str) -> Response:
         """Добавляет или удаляет рецеп из Cart."""
 
     @shopping_cart.mapping.post
-    def put_recipe_to_cart(self, request: WSGIRequest, pk: int | str) -> Response:
+    def put_recipe_to_cart(self, request, pk: int | str) -> Response:
         self.link_model = Carts
         return self._create_relation(pk)
 
     @shopping_cart.mapping.delete
-    def remove_recipe_from_cart(self, request: WSGIRequest, pk: int | str) -> Response:
+    def remove_recipe_from_cart(self, request, pk: int | str) -> Response:
         self.link_model = Carts
         recipe = get_object_or_404(Recipe, id=pk)
-        if not Carts.objects.filter(user=request.user, recipe=recipe).exists():
+        if not Carts.objects.filter(
+                user=request.user, recipe=recipe
+        ).exists():
             return Response(status=HTTP_400_BAD_REQUEST)
         return self._delete_relation(Q(recipe__id=pk))
 
@@ -170,6 +178,8 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
         user = self.request.user
         filename = f"{user.username}_shopping_list.txt"
         shopping_list = create_shopping_list(user)
-        response = HttpResponse(shopping_list, content_type="text.txt; charset=utf-8")
+        response = HttpResponse(
+            shopping_list, content_type="text.txt; charset=utf-8"
+        )
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response

@@ -70,9 +70,6 @@ class UserInfoSerializer(UserSerializer):
             and request.user.is_authenticated
             and obj.subscriptions.filter(user=request.user).exists()
         )
-        # if request and request.user.is_authenticated:
-        #     return obj.subscriptions.filter(user=request.user).exists()
-        # return False
 
 
 class UserSubscribeSerializer(UserInfoSerializer):
@@ -164,7 +161,9 @@ class RecipeSerializer(ModelSerializer):
         return (
             request
             and request.user.is_authenticated
-            and Favorites.objects.filter(user=request.user, recipe=obj).exists()
+            and Favorites.objects.filter(
+            user=request.user, recipe=obj
+        ).exists()
         )
 
     def get_is_in_shopping_cart(self, obj):
@@ -172,7 +171,9 @@ class RecipeSerializer(ModelSerializer):
         return (
             request
             and request.user.is_authenticated
-            and Carts.objects.filter(user=request.user, recipe=obj).exists()
+            and Carts.objects.filter(
+            user=request.user, recipe=obj
+        ).exists()
         )
 
     def to_representation(self, instance):
@@ -186,7 +187,12 @@ class RecipeSerializer(ModelSerializer):
         ingredients = self.initial_data.get("ingredients")
         images = self.initial_data.get("image")
         cooking_time = self.initial_data.get("cooking_time")
-        if not tags_id or not ingredients or not images or int(cooking_time) < 1:
+        if (
+            not tags_id
+            or not ingredients
+            or not images
+            or int(cooking_time) < 1
+        ):
             raise ValidationError("Недостаточно данных.")
         tags = tags_validator(tags_id, Tag)
         ingredients = ingredients_validator(ingredients, Ingredient)
