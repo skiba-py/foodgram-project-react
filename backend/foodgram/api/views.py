@@ -14,9 +14,13 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from .mixins import AddDeleteMixin
 from .pagination import PageLimitPagination
 from .permissions import AuthorStaffOrReadOnly
-from .serializers import (IngredientSerializer, RecipeSerializer,
-                          ShortRecipeSerializer, TagSerializer,
-                          UserSubscribeSerializer)
+from .serializers import (
+    IngredientSerializer,
+    RecipeSerializer,
+    ShortRecipeSerializer,
+    TagSerializer,
+    UserSubscribeSerializer,
+)
 from recipes.models import Carts, Favorites, Ingredient, Recipe, Tag
 from users.models import Subscriptions
 
@@ -35,25 +39,20 @@ class UserViewSet(DjoserUserViewSet, AddDeleteMixin):
         """Создает или удаляет связь между пользователями."""
 
     @subscribe.mapping.post
-    def create_subscribe(
-            self, request, id: int | str
-    ) -> Response:
+    def create_subscribe(self, request, id: int | str) -> Response:
         return self._create_relation(id)
 
     @subscribe.mapping.delete
-    def delete_subscribe(
-            self, request, id: int | str
-    ) -> Response:
+    def delete_subscribe(self, request, id: int | str) -> Response:
         author = get_object_or_404(User, id=id)
-        if not Subscriptions.objects.filter(user=request.user,
-                                            author=author).exists():
+        if not Subscriptions.objects.filter(user=request.user, author=author).exists():
             return Response(
-                {'errors': 'Вы не подписаны на этого пользователя'},
-                status=HTTP_400_BAD_REQUEST
+                {"errors": "Вы не подписаны на этого пользователя"},
+                status=HTTP_400_BAD_REQUEST,
             )
         return self._delete_relation(Q(author__id=id))
 
-    @action(methods=('get',), detail=False)
+    @action(methods=("get",), detail=False)
     def subscriptions(self, request) -> Response:
         """Подписки."""
         pages = self.paginate_queryset(
@@ -82,24 +81,23 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
     def get_queryset(self) -> list[Ingredient]:
         """Получает queryset."""
-
-        name: str = self.request.query_params.get('name')
+        name: str = self.request.query_params.get("name")
         query = self.queryset
         if not name:
             return query
 
         starts_queryset = query.filter(name__istartswith=name)
         starts_names = (ing.name for ing in starts_queryset)
-        contain_queryset = query.filter(
-            name__icontains=name
-        ).exclude(name__in=starts_names)
+        contain_queryset = query.filter(name__icontains=name).exclude(
+            name__in=starts_names
+        )
         return list(starts_queryset) + list(contain_queryset)
 
 
 class RecipeViewSet(ModelViewSet, AddDeleteMixin):
     """Вьюсет для Recipe."""
 
-    queryset = Recipe.objects.select_related('author')
+    queryset = Recipe.objects.select_related("author")
     serializer_class = RecipeSerializer
     permission_classes = (AuthorStaffOrReadOnly,)
     add_serializer = ShortRecipeSerializer
@@ -107,29 +105,26 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
 
     def get_queryset(self) -> QuerySet[Recipe]:
         """Получает queryset."""
-
         query = self.queryset
-        tags: list = self.request.query_params.getlist('tags')
+        tags: list = self.request.query_params.getlist("tags")
         if tags:
             query = query.filter(tags__slug__in=tags).distinct()
-        author: str = self.request.query_params.get('author')
+        author: str = self.request.query_params.get("author")
         if author:
             query = query.filter(author=author)
 
         if self.request.user.is_anonymous:
             return query
 
-        is_in_shopping_cart: str = self.request.query_params.get(
-            'is_in_shopping_cart'
-        )
-        if is_in_shopping_cart in ('1', 'true'):
+        is_in_shopping_cart: str = self.request.query_params.get("is_in_shopping_cart")
+        if is_in_shopping_cart in ("1", "true"):
             query = query.filter(in_carts__user=self.request.user)
-        elif is_in_shopping_cart in ('0', 'false'):
+        elif is_in_shopping_cart in ("0", "false"):
             query = query.exclude(in_carts__user=self.request.user)
-        is_favorited: str = self.request.query_params.get('is_favorited')
-        if is_favorited in ('1', 'true'):
+        is_favorited: str = self.request.query_params.get("is_favorited")
+        if is_favorited in ("1", "true"):
             query = query.filter(favorites__user=self.request.user)
-        elif is_favorited in ('0', 'false'):
+        elif is_favorited in ("0", "false"):
             query = query.exclude(favorites__user=self.request.user)
         return query
 
@@ -138,21 +133,17 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
         """Добавляет или удаляет рецеп из Favorites."""
 
     @favorite.mapping.post
-    def put_recipe_to_favorites(
-            self, request: WSGIRequest, pk: int | str
-    ) -> Response:
+    def put_recipe_to_favorites(self, request: WSGIRequest, pk: int | str) -> Response:
         self.link_model = Favorites
         return self._create_relation(pk)
 
     @favorite.mapping.delete
     def remove_recipe_from_favorites(
-            self, request: WSGIRequest, pk: int | str
+        self, request: WSGIRequest, pk: int | str
     ) -> Response:
         self.link_model = Favorites
         recipe = get_object_or_404(Recipe, id=pk)
-        if not Favorites.objects.filter(
-                user=request.user, recipe=recipe
-        ).exists():
+        if not Favorites.objects.filter(user=request.user, recipe=recipe).exists():
             return Response(status=HTTP_400_BAD_REQUEST)
         return self._delete_relation(Q(recipe__id=pk))
 
@@ -161,33 +152,24 @@ class RecipeViewSet(ModelViewSet, AddDeleteMixin):
         """Добавляет или удаляет рецеп из Cart."""
 
     @shopping_cart.mapping.post
-    def put_recipe_to_cart(
-            self, request: WSGIRequest, pk: int | str
-    ) -> Response:
+    def put_recipe_to_cart(self, request: WSGIRequest, pk: int | str) -> Response:
         self.link_model = Carts
         return self._create_relation(pk)
 
     @shopping_cart.mapping.delete
-    def remove_recipe_from_cart(
-            self, request: WSGIRequest, pk: int | str
-    ) -> Response:
+    def remove_recipe_from_cart(self, request: WSGIRequest, pk: int | str) -> Response:
         self.link_model = Carts
         recipe = get_object_or_404(Recipe, id=pk)
-        if not Carts.objects.filter(
-                user=request.user, recipe=recipe
-        ).exists():
+        if not Carts.objects.filter(user=request.user, recipe=recipe).exists():
             return Response(status=HTTP_400_BAD_REQUEST)
         return self._delete_relation(Q(recipe__id=pk))
 
-    @action(methods=('get',), detail=False)
+    @action(methods=("get",), detail=False)
     def download_shopping_cart(self, request) -> Response | HttpResponse:
         """Скачивает файл Carts."""
-
         user = self.request.user
-        filename = f'{user.username}_shopping_list.txt'
+        filename = f"{user.username}_shopping_list.txt"
         shopping_list = create_shopping_list(user)
-        response = HttpResponse(
-            shopping_list, content_type='text.txt; charset=utf-8'
-        )
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response = HttpResponse(shopping_list, content_type="text.txt; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response

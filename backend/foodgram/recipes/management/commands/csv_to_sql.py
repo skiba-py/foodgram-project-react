@@ -9,13 +9,18 @@ MODELS_FIELDS = {}
 
 
 class Command(BaseCommand):
-    help = 'CSV to SQL'
+    """
+    Кастомная консольная команда для иморта ингредиентов в базу.
+    python3 manage.py csv_to_sql
+    """
+
+    help = "CSV to SQL"
 
     def handle(self, *args, **options):
         with open(
-                f'{settings.BASE_DIR}/data/ingredients.csv',
-                'rt',
-                encoding='utf-8',
+            f"{settings.BASE_DIR}/data/ingredients.csv",
+            "rt",
+            encoding="utf-8",
         ) as csv_file:
             file_reader = csv.reader(csv_file)
             for row in file_reader:
@@ -24,4 +29,4 @@ class Command(BaseCommand):
                     name=name,
                     measurement_unit=measurement_unit,
                 )
-        self.stdout.write(self.style.SUCCESS('Все данные загружены'))
+        self.stdout.write(self.style.SUCCESS("Все данные загружены"))
