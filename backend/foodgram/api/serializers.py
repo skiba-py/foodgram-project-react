@@ -162,8 +162,8 @@ class RecipeSerializer(ModelSerializer):
             request
             and request.user.is_authenticated
             and Favorites.objects.filter(
-            user=request.user, recipe=obj
-        ).exists()
+                user=request.user, recipe=obj
+            ).exists()
         )
 
     def get_is_in_shopping_cart(self, obj):
@@ -172,8 +172,8 @@ class RecipeSerializer(ModelSerializer):
             request
             and request.user.is_authenticated
             and Carts.objects.filter(
-            user=request.user, recipe=obj
-        ).exists()
+                user=request.user, recipe=obj
+            ).exists()
         )
 
     def to_representation(self, instance):
