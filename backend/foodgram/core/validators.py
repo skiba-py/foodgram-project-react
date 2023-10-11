@@ -13,10 +13,10 @@ if TYPE_CHECKING:
 class StrValidator:
     """Проверяет введённую строку регулярными выражениями."""
 
-    first_regex = '[^а-яёА-ЯЁ]+'
-    second_regex = '[^a-zA-Z]+'
-    field = 'Переданное значение'
-    message = '<%s> на разных языках либо содержит не только буквы.'
+    first_regex = "[^а-яёА-ЯЁ]+"
+    second_regex = "[^a-zA-Z]+"
+    field = "Переданное значение"
+    message = "<%s> на разных языках либо содержит не только буквы."
 
     def __init__(
         self,
@@ -30,7 +30,7 @@ class StrValidator:
             self.second_regex = second_regex
         if field is not None:
             self.field = field
-        self.message = f'\n{self.field} {self.message}\n'
+        self.message = f"\n{self.field} {self.message}\n"
 
         self.first_regex = compile(self.first_regex)
         self.second_regex = compile(self.second_regex)
@@ -45,8 +45,8 @@ class MinLenValidator:
     """Проверяет минимальную длину значения."""
 
     min_len = 0
-    field = 'Переданное значение'
-    message = '\n%s недостаточной длины.\n'
+    field = "Переданное значение"
+    message = "\n%s недостаточной длины.\n"
 
     def __init__(
         self,
@@ -70,53 +70,52 @@ class MinLenValidator:
 
 def hex_color_validator(color: str) -> str:
     """Проверяет - может ли значение быть шестнадцатеричным цветом."""
-
-    color = color.strip(' #')
+    color = color.strip(" #")
     if len(color) not in (3, 6):
         raise ValidationError(
-            f'Код цвета {color} не правильной длины ({len(color)}).'
+            f"Код цвета {color} не правильной длины ({len(color)})."
         )
     if not set(color).issubset(hexdigits):
-        raise ValidationError(f'{color} не шестнадцатиричное.')
+        raise ValidationError(f"{color} не шестнадцатиричное.")
     if len(color) == 3:
-        return f'#{color[0] * 2}{color[1] * 2}{color[2] * 2}'.upper()
-    return '#' + color.upper()
+        return f"#{color[0] * 2}{color[1] * 2}{color[2] * 2}".upper()
+    return "#" + color.upper()
 
 
-def tags_validator(tags_ids: list[int | str], Tag: 'Tag') -> list['Tag']:
+def tags_validator(tags_ids: list[int | str], Tag: "Tag") -> list["Tag"]:
     """Проверяет наличие тэгов с указанными id."""
-
     tags = Tag.objects.filter(id__in=tags_ids)
     if len(tags) != len(tags_ids):
-        raise ValidationError('Указан несуществующий тэг')
+        raise ValidationError("Указан несуществующий тэг")
     return tags
 
 
 def ingredients_validator(
     ingredients: list[dict[str, str | int]],
-    Ingredient: 'Ingredient',
-) -> dict[int, tuple['Ingredient', int]]:
+    Ingredient: "Ingredient",
+) -> dict[int, tuple["Ingredient", int]]:
     """Проверяет список ингредиентов."""
-
     valid_ings = {}
 
     for ing in ingredients:
-        if (not (isinstance(ing['amount'], int)
-           or ing['amount'].isdigit()) or int(ing['amount']) <= 0):
-            raise ValidationError('Неправильное количество ингредиента')
+        if (
+            not (isinstance(ing["amount"], int) or ing["amount"].isdigit())
+            or int(ing["amount"]) <= 0
+        ):
+            raise ValidationError("Неправильное количество ингредиента")
 
-        if ing['id'] in valid_ings:
-            raise ValidationError('Нельзя добавлять одинаковые ингредиенты')
-        valid_ings[ing['id']] = int(ing['amount'])
-        if valid_ings[ing['id']] <= 0:
-            raise ValidationError('Неправильное количество ингредиента')
+        if ing["id"] in valid_ings:
+            raise ValidationError("Нельзя добавлять одинаковые ингредиенты")
+        valid_ings[ing["id"]] = int(ing["amount"])
+        if valid_ings[ing["id"]] <= 0:
+            raise ValidationError("Неправильное количество ингредиента")
 
     if not valid_ings:
-        raise ValidationError('Неправильные ингредиенты')
+        raise ValidationError("Неправильные ингредиенты")
 
     db_ings = Ingredient.objects.filter(pk__in=valid_ings.keys())
     if not db_ings:
-        raise ValidationError('Неправильные ингредиенты')
+        raise ValidationError("Неправильные ингредиенты")
 
     for ing in db_ings:
         valid_ings[ing.pk] = (ing, valid_ings[ing.pk])

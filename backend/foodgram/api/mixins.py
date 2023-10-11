@@ -5,8 +5,12 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
-from rest_framework.status import (HTTP_201_CREATED, HTTP_204_NO_CONTENT,
-                                   HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND)
+from rest_framework.status import (
+    HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+)
 
 from users.models import Subscriptions
 
@@ -21,24 +25,23 @@ class AddDeleteMixin:
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context['request'] = self.request
+        context["request"] = self.request
         return context
 
     def _create_relation(self, obj_id: int | str) -> Response:
         """Добавляет связь Many2Many."""
-
         if self.link_model == Subscriptions:
             try:
                 User.objects.get(pk=obj_id)
             except User.DoesNotExist:
                 return Response(
-                    {'error': 'Автор не существует.'},
+                    {"error": "Автор не существует."},
                     status=HTTP_404_NOT_FOUND,
                 )
         else:
             if not self.queryset.filter(pk=obj_id).exists():
                 return Response(
-                    {'error': 'Рецепт не существует.'},
+                    {"error": "Рецепт не существует."},
                     status=HTTP_400_BAD_REQUEST,
                 )
 
@@ -47,7 +50,7 @@ class AddDeleteMixin:
             self.link_model(None, obj.pk, self.request.user.pk).save()
         except IntegrityError:
             return Response(
-                {'error': 'Действие уже выполнено.'},
+                {"error": "Действие уже выполнено."},
                 status=HTTP_400_BAD_REQUEST,
             )
         serializer: ModelSerializer = self.add_serializer(obj)
@@ -55,7 +58,6 @@ class AddDeleteMixin:
 
     def _delete_relation(self, q: Q) -> Response:
         """Удаляет связь Many2Many."""
-
         try:
             obj = self.link_model.objects.get(q & Q(user=self.request.user))
         except self.link_model.DoesNotExist:
@@ -64,7 +66,7 @@ class AddDeleteMixin:
         if self.link_model != Subscriptions:
             if not self.queryset.filter(pk=obj.recipe.id).exists():
                 return Response(
-                    {'error': 'Рецепт не существует.'},
+                    {"error": "Рецепт не существует."},
                     status=HTTP_400_BAD_REQUEST,
                 )
 
