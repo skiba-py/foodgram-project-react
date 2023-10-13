@@ -185,7 +185,7 @@ class RecipeSerializer(ModelSerializer):
         """Валидация данных при операциях с рецептом."""
         tags_id = self.initial_data.get("tags")
         ingredients = self.initial_data.get("ingredients")
-        images = self.initial_data.get("image")
+        # images = self.initial_data.get("image")
         cooking_time = self.initial_data.get("cooking_time")
         if (
             not tags_id
