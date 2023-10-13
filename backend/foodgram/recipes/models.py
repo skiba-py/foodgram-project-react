@@ -1,3 +1,4 @@
+from PIL import Image
 from core.validators import StrValidator, hex_color_validator
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -117,7 +118,8 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         verbose_name="Картинка",
-        upload_to="recipes_images",
+        upload_to="recipes_images/",
+        blank=True,
     )
     text = models.TextField(
         verbose_name="Описание блюда",
@@ -159,6 +161,12 @@ class Recipe(models.Model):
     def clean(self) -> None:
         self.name = self.name.capitalize()
         return super().clean()
+
+    def save(self, *args, **kwargs) -> None:
+        super().save(*args, **kwargs)
+        image = Image.open(self.image.path)
+        image.thumbnail((500, 500))
+        image.save(self.image.path)
 
 
 class AmountIngredient(models.Model):
