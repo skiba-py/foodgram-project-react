@@ -45,7 +45,7 @@ class UserSerializer(UserCreateSerializer):
 
 
 class UserInfoSerializer(UserSerializer):
-    """Сериализатор для получения информации о пользователе"""
+    """Сериализатор для получения информации о пользователе."""
 
     is_subscribed = SerializerMethodField()
 
