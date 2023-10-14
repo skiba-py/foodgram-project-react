@@ -120,7 +120,7 @@ class IngredientSerializer(ModelSerializer):
 
 
 class RecipeSerializer(ModelSerializer):
-    """Сериализатор модели Recipe."""
+    """Сериализатор модели Recipe"""
 
     author = UserInfoSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
