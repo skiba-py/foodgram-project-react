@@ -74,7 +74,7 @@ http://127.0.0.1:8000/admin
 docker-compose up -d --build
 ```
 Выполните миграции:
-```sh
+```
 docker-compose exec backend python manage.py migrate
 ```
 Создайте суперпользователя:
