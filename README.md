@@ -33,11 +33,11 @@
 1. Клонировать репозиторий:
 2. Перейти в папку с проектом:
 3. Установить виртуальное окружение для проекта:
-```sh
+```
 python -m venv venv
 ``` 
 4. Активировать виртуальное окружение для проекта:
-```sh
+```
 # для OS Lunix и MacOS
 source venv/bin/activate
 
@@ -45,23 +45,23 @@ source venv/bin/activate
 source venv/Scripts/activate
 ```
 5. Установить зависимости:
-```sh
+```
 python3 -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 6. Выполнить миграции на уровне проекта:
-```sh
+```
 python3 manage.py migrate
 ```
 7. Запустить проект локально:
-```sh
+```
 python3 manage.py runserver
 
 # адрес запущенного проекта
 http://127.0.0.1:8000
 ```
 8. Зарегистирировать суперпользователя Django:
-```sh
+```
 python3 manage.py createsuperuser
 
 # адрес панели администратора
@@ -86,10 +86,10 @@ docker-compose exec backend python manage.py createsuperuser
 docker-compose exec backend python manage.py collectstatic --no-input
 ```
 Наполните базу данных ингредиентами и тегами. Выполняйте команду из дериктории где находится файл manage.py:
-```sh
+```
 docker-compose exec backend python manage.py csv_to_sql
 ```
 Остановка проекта:
-```sh
+```
 docker-compose down
 ```
