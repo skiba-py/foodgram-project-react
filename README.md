@@ -70,7 +70,7 @@ http://127.0.0.1:8000/admin
 ### Сборка в контейнерах:
 
 Из папки infra/ разверните контейнеры при помощи docker-compose:
-```sh
+```
 docker-compose up -d --build
 ```
 Выполните миграции:
@@ -78,11 +78,11 @@ docker-compose up -d --build
 docker-compose exec backend python manage.py migrate
 ```
 Создайте суперпользователя:
-```sh
+```
 docker-compose exec backend python manage.py createsuperuser
 ```
 Соберите статику:
-```sh
+```
 docker-compose exec backend python manage.py collectstatic --no-input
 ```
 Наполните базу данных ингредиентами и тегами. Выполняйте команду из дериктории где находится файл manage.py:
